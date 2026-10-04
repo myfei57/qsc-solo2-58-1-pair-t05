@@ -15,7 +15,9 @@ from portpower.cable.monitor import TemperatureMonitor
 from portpower.cable.sensor import TemperatureSensor
 from portpower.disconn.breaker import Breaker
 from portpower.disconn.limit import LimitEnforcer
+from portpower.disconn.pool import BreakerPool
 from portpower.disconn.protect import Protector
+from portpower.disconn.service import BatchService
 from portpower.freq.syncer import Syncer
 from portpower.meter.binder import Binder
 from portpower.meter.tariff import Tariff
@@ -64,6 +66,8 @@ class Runtime:
     shore: Breaker
     protector: Protector
     limiter: LimitEnforcer
+    pool: BreakerPool
+    batch_service: BatchService
 
 
 def build_runtime(harbor: Harbor, store: RecordStore) -> Runtime:
@@ -77,17 +81,26 @@ def build_runtime(harbor: Harbor, store: RecordStore) -> Runtime:
     cable_id, cable_rating = SHORE_CABLE
     cables.add(cable_id, cable_rating)
 
+    pool = BreakerPool()
+    shore = Breaker(SHORE_BREAKER_ID)
+    pool.register(SHORE_BREAKER_ID, shore)
+    ledger = Ledger(store)
+    binder = Binder(store)
+    batch_service = BatchService.build(
+        store, pool, binder=binder, ledger=ledger
+    )
+
     return Runtime(
         harbor=harbor,
         catalog=catalog,
         store=store,
-        ledger=Ledger(store),
+        ledger=ledger,
         quotas=QuotaManager(store),
         profiles=ProfileRegistry(store),
         fleet=Fleet(),
         mapping=BerthMapping(store),
         berths=berths,
-        binder=Binder(store),
+        binder=binder,
         syncer=Syncer(store),
         sensor=TemperatureSensor(),
         filter=filter_window,
@@ -98,7 +111,9 @@ def build_runtime(harbor: Harbor, store: RecordStore) -> Runtime:
         scheduler=Scheduler(store),
         history=ProfileHistory(store),
         phase=PhaseState(),
-        shore=Breaker(SHORE_BREAKER_ID),
+        shore=shore,
         protector=Protector(PROTECTION_THRESHOLD, filter_window),
         limiter=LimitEnforcer(ProfileRegistry(store)),
+        pool=pool,
+        batch_service=batch_service,
     )

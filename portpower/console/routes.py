@@ -6,6 +6,7 @@ from functools import partial
 
 from portpower.console.handlers import (
     audit,
+    batch,
     berth,
     breaker,
     cable,
@@ -37,6 +38,14 @@ def build_router(runtime) -> Router:
 
     router.post("/connect", bind(connect.connect, runtime))
     router.post("/disconnect", bind(disconnect.disconnect, runtime))
+
+    router.post("/batch/disconnect", bind(batch.batch_create, runtime))
+    router.get("/batch/disconnect", bind(batch.batch_get, runtime))
+    router.get("/batch/disconnect/list", bind(batch.batch_list, runtime))
+    router.post("/batch/disconnect/resume", bind(batch.batch_resume, runtime))
+    router.post("/batch/disconnect/retry", bind(batch.batch_retry, runtime))
+    router.post("/batch/disconnect/skip", bind(batch.batch_skip, runtime))
+    router.post("/batch/disconnect/order", bind(batch.batch_order, runtime))
 
     router.post("/meter", bind(meter.record_reading, runtime))
     router.get("/usage", bind(meter.usage, runtime))

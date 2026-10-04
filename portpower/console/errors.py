@@ -5,6 +5,9 @@ from __future__ import annotations
 from portpower.berth.berth import BerthOccupied, BerthVacant
 from portpower.berth.registry import NoBerthAvailable
 from portpower.berth.schedule import ReservationConflict
+from portpower.batch.plan import PlanInvalid
+from portpower.batch.repository import BatchMissing
+from portpower.batch.runner import BatchStateError
 from portpower.console.http import BadRequest, Response
 from portpower.disconn.breaker import BreakerNotClosed
 from portpower.disconn.close import ArmMissing
@@ -38,10 +41,14 @@ CONFLICT_ERRORS: tuple[type[Exception], ...] = (
 
 
 def error_response(exc: Exception) -> Response:
-    if isinstance(exc, LookupError) and not isinstance(exc, StoreKeyError):
+    if isinstance(exc, (LookupError, BatchMissing)) and not isinstance(
+        exc, StoreKeyError
+    ):
         return Response.json(404, {"error": str(exc)})
     if isinstance(exc, CONFLICT_ERRORS):
         return Response.json(409, {"error": str(exc)})
-    if isinstance(exc, (BadRequest, ValueError, TypeError)):
+    if isinstance(
+        exc, (BadRequest, ValueError, TypeError, BatchStateError, PlanInvalid)
+    ):
         return Response.json(400, {"error": str(exc)})
     return Response.json(500, {"error": str(exc)})
