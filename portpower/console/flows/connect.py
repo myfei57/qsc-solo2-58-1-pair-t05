@@ -117,6 +117,7 @@ def run_connect(runtime, request: ConnectRequest) -> ConnectResult:
             target=profile.frequency,
             tolerance=SYNC_TOLERANCE,
         )
+        runtime.breakers.mark_closed(request.berth)
         runtime.sensor.set(request.temperature)
         runtime.monitor.observe(request.temperature)
         runtime.protector.verdict(runtime.sensor.read())

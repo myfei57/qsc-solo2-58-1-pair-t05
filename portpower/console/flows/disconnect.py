@@ -65,6 +65,7 @@ def run_disconnect(runtime, request: DisconnectRequest) -> DisconnectResult:
         [Connection(breaker=runtime.shore, binder=runtime.binder, berth=request.berth)],
         {request.berth: request.final_value},
     )
+    runtime.breakers.mark_open(request.berth)
 
     meter = Meter(f"meter-{request.berth}", request.berth, runtime.store)
     frozen = freeze(meter)

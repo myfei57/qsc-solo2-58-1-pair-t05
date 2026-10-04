@@ -2,6 +2,7 @@
 
 from portpower.console.handlers import (
     audit,
+    batch,
     berth,
     breaker,
     cable,
@@ -17,6 +18,7 @@ from portpower.console.handlers import (
 
 __all__ = [
     "audit",
+    "batch",
     "berth",
     "breaker",
     "cable",

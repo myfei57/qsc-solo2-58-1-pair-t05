@@ -15,7 +15,9 @@ from portpower.cable.monitor import TemperatureMonitor
 from portpower.cable.sensor import TemperatureSensor
 from portpower.disconn.breaker import Breaker
 from portpower.disconn.limit import LimitEnforcer
+from portpower.disconn.plan import BatchStore
 from portpower.disconn.protect import Protector
+from portpower.disconn.registry import BreakerRegistry
 from portpower.freq.syncer import Syncer
 from portpower.meter.binder import Binder
 from portpower.meter.tariff import Tariff
@@ -64,6 +66,8 @@ class Runtime:
     shore: Breaker
     protector: Protector
     limiter: LimitEnforcer
+    breakers: BreakerRegistry
+    batches: BatchStore
 
 
 def build_runtime(harbor: Harbor, store: RecordStore) -> Runtime:
@@ -101,4 +105,6 @@ def build_runtime(harbor: Harbor, store: RecordStore) -> Runtime:
         shore=Breaker(SHORE_BREAKER_ID),
         protector=Protector(PROTECTION_THRESHOLD, filter_window),
         limiter=LimitEnforcer(ProfileRegistry(store)),
+        breakers=BreakerRegistry(store),
+        batches=BatchStore(store),
     )
